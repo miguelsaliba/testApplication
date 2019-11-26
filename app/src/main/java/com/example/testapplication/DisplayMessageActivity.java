@@ -18,7 +18,7 @@ public class DisplayMessageActivity extends AppCompatActivity {
         String message = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
 
         assert message != null;
-        message = simplify(message);
+        message = simplify(message); // sends user input to simplify method
 
         // Capture the layout's TextView and set the string as its text
         TextView textView = findViewById(R.id.textView);
@@ -26,7 +26,8 @@ public class DisplayMessageActivity extends AppCompatActivity {
     }
 
     private String simplify(String message) {
-        // Separate operation signs
+
+        // Gets the index of the last iteration of each operator
 
         int lastMult = message.lastIndexOf("*");
         int lastDiv = message.lastIndexOf("/");
@@ -35,10 +36,14 @@ public class DisplayMessageActivity extends AppCompatActivity {
 
         double num;
 
+        // If the last operator is multiplication
         if (lastMult > lastDiv && lastMult > lastSub && lastMult > lastAdd){
+            // num is the last number in the input string
             num = Double.parseDouble(message.substring(lastMult+1));
+            // removes the last number and operator from the string
             message = message.substring(0,lastMult);
 
+            // MAGIC
             return String.valueOf(Double.parseDouble(simplify(message)) * num);
 
         }
