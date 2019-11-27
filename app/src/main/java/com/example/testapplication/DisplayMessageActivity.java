@@ -43,7 +43,7 @@ public class DisplayMessageActivity extends AppCompatActivity {
             // removes the last number and operator from the string
             message = message.substring(0,lastMult);
 
-            // MAGIC
+            // multiplies the last number by a recursive method so that it goes from left to right
             return String.valueOf(Double.parseDouble(simplify(message)) * num);
 
         }
@@ -67,6 +67,7 @@ public class DisplayMessageActivity extends AppCompatActivity {
             return String.valueOf(Double.parseDouble(simplify(message)) + num);
 
         } else {
+            // If the input has no operators it returns the number alone
             return message;
         }
 
