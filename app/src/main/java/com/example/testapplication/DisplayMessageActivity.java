@@ -2,9 +2,13 @@ package com.example.testapplication;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.text.DecimalFormat;
+import java.util.Arrays;
 
 public class DisplayMessageActivity extends AppCompatActivity {
 
@@ -24,12 +28,86 @@ public class DisplayMessageActivity extends AppCompatActivity {
         TextView textView = findViewById(R.id.textView);
         textView.setText(message);
     }
+    public static String simplify(String message) {
 
-    private String simplify(String message) {
+        DecimalFormat format = new DecimalFormat("#.#");
+        format.setDecimalSeparatorAlwaysShown(false);
+
+        String[] temp = message.split("(?<=[()+\\-*/^])|(?=[()+\\-*/^])");
+        System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
+
+        int index1 = -1;
+        for (int i = 0; i < temp.length; i++) {
+            if (temp[i].equals("(")) {
+                index1 = i;
+            } else if (temp[i].equals(")")) {
+                if (index1 == -1) {
+                    return "error: incorrect bracket placement";
+                }
+                String[] insideParentheses;
+                if (index1+1 == i){
+                    insideParentheses = Arrays.copyOfRange(temp, index1, i);
+                } else {
+                    insideParentheses = Arrays.copyOfRange(temp, index1 + 1, i);
+                }
+                String num = simplify(TextUtils.join("", Arrays.asList(insideParentheses)));
+                temp[i] = num;
+                temp = removeElement(temp, index1, i-1);
+                i = 0;
+                System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
+            }
+        }
+
+        for (int i = 0; i < temp.length; i++) {
+            if (temp[i].equals("^")) {
+                temp[i+1] = format.format( Math.pow( Double.parseDouble(temp[i-1]),  Double.parseDouble(temp[i+1]) ));
+                temp = removeElement(temp, i-1, i);
+                i -= 2;
+                System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
+
+            }
+        }
+
+        for (int i = 0; i < temp.length; i++) {
+            if (temp[i].equals("*")) {
+                temp[i+1] = format.format(Double.parseDouble(temp[i - 1]) * Double.parseDouble(temp[i + 1]));
+                temp = removeElement(temp, i-1, i);
+                i -= 2;
+                System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
+
+            } else if (temp[i].equals("/")){
+                if (temp[i + 1].equals("0")) {
+                    return "error: dividing by zero";
+                }
+                temp[i+1] = format.format(Double.parseDouble(temp[i - 1]) / Double.parseDouble(temp[i + 1]));
+                temp = removeElement(temp, i-1, i);
+                i -= 2;
+                System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
+
+            }
+        }
+
+        for (int i = 0; i < temp.length; i++) {
+            if (temp[i].equals("+")) {
+                temp[i+1] = format.format(Double.parseDouble(temp[i - 1]) + Double.parseDouble(temp[i + 1]));
+                temp = removeElement(temp, i-1, i);
+                i -= 2;
+                System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
+
+            } else if (temp[i].equals("-")){
+                temp[i+1] = format.format(Double.parseDouble(temp[i - 1]) - Double.parseDouble(temp[i + 1]));
+                temp = removeElement(temp, i-1, i);
+                i -= 2;
+                System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
+
+            }
+        }
+
+        return temp[0];
 
         // Gets the index of the last iteration of each operator
-
-        int lastMult = message.lastIndexOf("*");
+        /*
+        int lastMul = message.lastIndexOf("*");
         int lastDiv = message.lastIndexOf("/");
         int lastSub = message.lastIndexOf("-");
         int lastAdd = message.lastIndexOf("+");
@@ -37,11 +115,11 @@ public class DisplayMessageActivity extends AppCompatActivity {
         double num;
 
         // If the last operator is multiplication
-        if (lastMult > lastDiv && lastMult > lastSub && lastMult > lastAdd){
+        if (lastMul > lastDiv && lastMul > lastSub && lastMul > lastAdd){
             // num is the last number in the input string
-            num = Double.parseDouble(message.substring(lastMult+1));
+            num = Double.parseDouble(message.substring(lastMul+1));
             // removes the last number and operator from the string
-            message = message.substring(0,lastMult);
+            message = message.substring(0,lastMul);
 
             // MAGIC
             return String.valueOf(Double.parseDouble(simplify(message)) * num);
@@ -69,26 +147,24 @@ public class DisplayMessageActivity extends AppCompatActivity {
         } else {
             return message;
         }
-
-        /*
-        if (message.indexOf('+') >= 0) {
-            String[] parts = message.split("\\+");
-            message = String.valueOf(Integer.parseInt(parts[0]) + Integer.parseInt(parts[1]));
-
-        } else if (message.indexOf('-') >= 0) {
-            String[] parts = message.split("-");
-            message = String.valueOf(Integer.parseInt(parts[0]) - Integer.parseInt(parts[1]));
-
-        } else if (message.indexOf('/') >= 0) {
-            String[] parts = message.split("/");
-            message = String.valueOf(Integer.parseInt(parts[0]) / Integer.parseInt(parts[1]));
-
-        } else if (message.indexOf('*') >= 0) {
-            String[] parts = message.split("\\*");
-            message = String.valueOf(Integer.parseInt(parts[0]) * Integer.parseInt(parts[1]));
-
+        */
+    }
+    private static String[] removeElement(String[] theArray, int firstIndex, int lastIndex){
+        // if the index is not in the array or the array has no elements it returns the array
+        if (theArray == null || firstIndex < 0 || lastIndex < firstIndex || lastIndex >= theArray.length) {
+            return theArray;
         }
 
-         */
+        String[] newArray = new String[theArray.length-(lastIndex-firstIndex)-1];
+
+        for (int i = 0, k = 0; i < theArray.length; i++) {
+            if (i <= lastIndex && i >= firstIndex) {
+                continue;
+            }
+            newArray[k] = theArray[i];
+            k++;
+        }
+        return newArray;
     }
+
 }
