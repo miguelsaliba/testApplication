@@ -30,26 +30,34 @@ public class DisplayMessageActivity extends AppCompatActivity {
     }
     public static String simplify(String message) {
 
+        // remove .0 in doubles
         DecimalFormat format = new DecimalFormat("#.#");
         format.setDecimalSeparatorAlwaysShown(false);
 
+        // convert input into array
         String[] temp = message.split("(?<=[()+\\-*/^])|(?=[()+\\-*/^])");
         System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
 
         int index1 = -1;
         for (int i = 0; i < temp.length; i++) {
             if (temp[i].equals("(")) {
+                // gets index of paranthesis
                 index1 = i;
+                
             } else if (temp[i].equals(")")) {
+                // if ) is before ( or ( does not exist
                 if (index1 == -1) {
                     return "error: incorrect bracket placement";
                 }
                 String[] insideParentheses;
+                
+                // if there is only one element inside the parentheses
                 if (index1+1 == i){
                     insideParentheses = Arrays.copyOfRange(temp, index1, i);
                 } else {
                     insideParentheses = Arrays.copyOfRange(temp, index1 + 1, i);
                 }
+                
                 String num = simplify(TextUtils.join("", Arrays.asList(insideParentheses)));
                 temp[i] = num;
                 temp = removeElement(temp, index1, i-1);
@@ -159,6 +167,7 @@ public class DisplayMessageActivity extends AppCompatActivity {
         String[] newArray = new String[theArray.length-(lastIndex-firstIndex)-1];
 
         for (int i = 0, k = 0; i < theArray.length; i++) {
+            // skips index if it's inside the range
             if (i <= lastIndex && i >= firstIndex) {
                 continue;
             }
