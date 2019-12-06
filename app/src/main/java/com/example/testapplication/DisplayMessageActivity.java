@@ -35,8 +35,10 @@ public class DisplayMessageActivity extends AppCompatActivity {
         format.setDecimalSeparatorAlwaysShown(false);
 
         // convert input into array
+        System.out.println(message);
         String[] temp = message.split("(?<=[()+\\-*/^])|(?=[()+\\-*/^])");
-        System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
+
+        // PARENTHESES
 
         int index1 = -1;
         for (int i = 0; i < temp.length; i++) {
@@ -57,31 +59,40 @@ public class DisplayMessageActivity extends AppCompatActivity {
                 } else {
                     insideParentheses = Arrays.copyOfRange(temp, index1 + 1, i);
                 }
-                
+
                 String num = simplify(TextUtils.join("", Arrays.asList(insideParentheses)));
+                if (num.equals("error: dividing by zero")) {
+                    return "error: dividing by zero";
+                }
                 temp[i] = num;
                 temp = removeElement(temp, index1, i-1);
                 i = 0;
-                System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
+                System.out.println(getExpression(temp));
             }
         }
+
+        // EXPONENT
 
         for (int i = 0; i < temp.length; i++) {
             if (temp[i].equals("^")) {
                 temp[i+1] = format.format( Math.pow( Double.parseDouble(temp[i-1]),  Double.parseDouble(temp[i+1]) ));
                 temp = removeElement(temp, i-1, i);
                 i -= 2;
-                System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
+                System.out.println(getExpression(temp));
 
             }
         }
+
+
+        // MULTIPLICATION & DIVISION
+
 
         for (int i = 0; i < temp.length; i++) {
             if (temp[i].equals("*")) {
                 temp[i+1] = format.format(Double.parseDouble(temp[i - 1]) * Double.parseDouble(temp[i + 1]));
                 temp = removeElement(temp, i-1, i);
                 i -= 2;
-                System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
+                System.out.println(getExpression(temp));
 
             } else if (temp[i].equals("/")){
                 if (temp[i + 1].equals("0")) {
@@ -90,73 +101,30 @@ public class DisplayMessageActivity extends AppCompatActivity {
                 temp[i+1] = format.format(Double.parseDouble(temp[i - 1]) / Double.parseDouble(temp[i + 1]));
                 temp = removeElement(temp, i-1, i);
                 i -= 2;
-                System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
+                System.out.println(getExpression(temp));
 
             }
         }
+
+        // ADDITION & SUBTRACTION
 
         for (int i = 0; i < temp.length; i++) {
             if (temp[i].equals("+")) {
                 temp[i+1] = format.format(Double.parseDouble(temp[i - 1]) + Double.parseDouble(temp[i + 1]));
                 temp = removeElement(temp, i-1, i);
                 i -= 2;
-                System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
+                System.out.println(getExpression(temp));
 
             } else if (temp[i].equals("-")){
                 temp[i+1] = format.format(Double.parseDouble(temp[i - 1]) - Double.parseDouble(temp[i + 1]));
                 temp = removeElement(temp, i-1, i);
                 i -= 2;
-                System.out.println(Arrays.asList(temp).toString().substring(1).replaceFirst("]", "").replace(", ", ""));
-
+                System.out.println(getExpression(temp));
             }
         }
 
         return temp[0];
 
-        // Gets the index of the last iteration of each operator
-        /*
-        int lastMul = message.lastIndexOf("*");
-        int lastDiv = message.lastIndexOf("/");
-        int lastSub = message.lastIndexOf("-");
-        int lastAdd = message.lastIndexOf("+");
-
-        double num;
-
-        // If the last operator is multiplication
-        if (lastMul > lastDiv && lastMul > lastSub && lastMul > lastAdd){
-            // num is the last number in the input string
-            num = Double.parseDouble(message.substring(lastMul+1));
-            // removes the last number and operator from the string
-            message = message.substring(0,lastMul);
-
-            // multiplies the last number by a recursive method so that it goes from left to right
-            return String.valueOf(Double.parseDouble(simplify(message)) * num);
-
-        }
-        if (lastDiv > lastSub && lastDiv > lastAdd){
-            num = Double.parseDouble(message.substring(lastDiv+1));
-            message = message.substring(0,lastDiv);
-
-            return String.valueOf(Double.parseDouble(simplify(message)) / num);
-
-        }
-        if (lastSub > lastAdd){
-            num = Double.parseDouble(message.substring(lastSub+1));
-            message = message.substring(0,lastSub);
-
-            return String.valueOf(Double.parseDouble(simplify(message)) - num);
-
-        } else if (lastAdd > lastSub){
-            num = Double.parseDouble(message.substring(lastAdd+1));
-            message = message.substring(0,lastAdd);
-
-            return String.valueOf(Double.parseDouble(simplify(message)) + num);
-
-        } else {
-            // If the input has no operators it returns the number alone
-            return message;
-        }
-        */
     }
     private static String[] removeElement(String[] theArray, int firstIndex, int lastIndex){
         // if the index is not in the array or the array has no elements it returns the array
@@ -177,4 +145,7 @@ public class DisplayMessageActivity extends AppCompatActivity {
         return newArray;
     }
 
+    public static String getExpression(String[] arr) {
+        return TextUtils.join("", Arrays.asList(arr));
+    }
 }
