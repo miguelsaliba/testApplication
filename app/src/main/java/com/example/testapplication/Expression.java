@@ -7,20 +7,19 @@ import java.util.Arrays;
 
 class Expression {
     private StringBuffer steps = new StringBuffer();
+    private DecimalFormat format = new DecimalFormat("#.#");
 
     Expression(String message) {
+        // remove .0 in doubles
+        format.setDecimalSeparatorAlwaysShown(false);
         simplify(message);
     }
 
-    private String simplify(String message) {
+    private void simplify(String message) {
 
-        // remove .0 in doubles
-        DecimalFormat format = new DecimalFormat("#.#");
-        format.setDecimalSeparatorAlwaysShown(false);
 
         // convert input into array
         steps.append(message).append("\n");
-        System.out.println(message);
         String[] temp = message.split("(?<=[()+\\-*/^])|(?=[()+\\-*/^])");
 
         // PARENTHESES
@@ -35,7 +34,7 @@ class Expression {
                 // if ) is before ( or ( does not exist
                 if (index1 == -1) {
                     steps.append("error: incorrect bracket placement\n");
-                    return "error: incorrect bracket placement";
+                    return;
                 }
                 String[] insideParentheses;
 
@@ -46,86 +45,71 @@ class Expression {
                     insideParentheses = Arrays.copyOfRange(temp, index1 + 1, i);
                 }
 
-                String num = simplify(getExpression(insideParentheses));
-                if (num.equals("error: dividing by zero")) {
+                String num = solve(insideParentheses);
+                if (num.equals("ERR0")) {
                     steps.append("error: dividing by zero\n");
-                    return "error: dividing by zero";
+                    return;
                 }
                 temp[i] = num;
                 temp = removeElement(temp, index1, i-1);
                 i = 0;
-                System.out.println(getExpression(temp));
                 steps.append(getExpression(temp)).append("\n");
             }
         }
 
-        // EXPONENT
+        temp[0] = solve(temp);
+        if (temp[0].equals("ERR0")){
+            steps.append("error: dividing by zero\n");
+            temp[0] = "error: dividing by zero";
+        }
+    }
 
+    private String solve(String[] temp){
         for (int i = 0; i < temp.length; i++) {
             if (temp[i].equals("^")) {
-                temp[i+1] = format.format( Math.pow( Double.parseDouble(temp[i-1]),  Double.parseDouble(temp[i+1]) ));
-                temp = removeElement(temp, i-1, i);
-                i -= 2;
-                System.out.println(getExpression(temp));
-                steps.append(getExpression(temp)).append("\n");
-
+               temp[i+1] = format.format( Math.pow( Double.parseDouble(temp[i-1]),  Double.parseDouble(temp[i+1]) ));
+               temp = removeElement(temp, i-1, i);
+               i -= 2;
+             steps.append(getExpression(temp)).append("\n");
             }
         }
-
-
-        // MULTIPLICATION & DIVISION
-
-
         for (int i = 0; i < temp.length; i++) {
-            if (temp[i].equals("*")) {
-                temp[i+1] = format.format(Double.parseDouble(temp[i - 1]) * Double.parseDouble(temp[i + 1]));
+            if (temp[i].equals("*")){
+                temp[i+1] = format.format(Double.parseDouble(temp[i-1]) * Double.parseDouble(temp[i+1]));
                 temp = removeElement(temp, i-1, i);
-                i -= 2;
-                System.out.println(getExpression(temp));
+                i -= 1;
                 steps.append(getExpression(temp)).append("\n");
-
-
             } else if (temp[i].equals("/")){
-                if (temp[i + 1].equals("0")) {
-                    steps.append("error: dividing by zero\n");
-                    return "error: dividing by zero";
+                if (temp[i + 1].equals("0")){
+                    return "ERR0";
                 }
-                temp[i+1] = format.format(Double.parseDouble(temp[i - 1]) / Double.parseDouble(temp[i + 1]));
+                temp[i+1] = format.format(Double.parseDouble(temp[i-1]) / Double.parseDouble(temp[i+1]));
                 temp = removeElement(temp, i-1, i);
-                i -= 2;
-                System.out.println(getExpression(temp));
+                i -= 1;
                 steps.append(getExpression(temp)).append("\n");
-
             }
         }
-
-        // ADDITION & SUBTRACTION
 
         for (int i = 0; i < temp.length; i++) {
-            if (temp[i].equals("+")) {
-                temp[i+1] = format.format(Double.parseDouble(temp[i - 1]) + Double.parseDouble(temp[i + 1]));
+            if (temp[i].equals("+")){
+                temp[i+1] = format.format(Double.parseDouble(temp[i-1]) + Double.parseDouble(temp[i+1]));
                 temp = removeElement(temp, i-1, i);
-                i -= 2;
-                System.out.println(getExpression(temp));
+                i -= 1;
                 steps.append(getExpression(temp)).append("\n");
-
             } else if (temp[i].equals("-")){
-                temp[i+1] = format.format(Double.parseDouble(temp[i - 1]) - Double.parseDouble(temp[i + 1]));
+                temp[i+1] = format.format(Double.parseDouble(temp[i-1]) - Double.parseDouble(temp[i+1]));
                 temp = removeElement(temp, i-1, i);
-                i -= 2;
-                System.out.println(getExpression(temp));
+                i -= 1;
                 steps.append(getExpression(temp)).append("\n");
-
-
             }
         }
-
-        return temp[0];
-
+        return getExpression(temp);
     }
+
     String getSteps(){
         return steps.toString();
     }
+
     private static String[] removeElement(String[] theArray, int firstIndex, int lastIndex){
         // if the index is not in the array or the array has no elements it returns the array
         if (theArray == null || firstIndex < 0 || lastIndex < firstIndex || lastIndex >= theArray.length) {
